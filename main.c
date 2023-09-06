@@ -1,21 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-
-typedef struct musica {
-    char *nome;
-    float duracao;
-    char *artista;
-} musica;
 
 typedef struct Item {
-    musica valor;
+    int valor;
     struct Item* proximo;
     struct Item* anterior;
 } Item;
 
-Item* criarItem(musica valor) {
-    Item * novoItem = malloc(sizeof(Item));
+Item* criarItem(int valor) {
+    Item* novoItem = malloc(sizeof(Item));
     novoItem->valor = valor;
     novoItem->proximo = NULL;
     novoItem->anterior = NULL;
@@ -23,7 +16,7 @@ Item* criarItem(musica valor) {
     return novoItem;
 }
 
-void adicionarItem(Item** inicio, musica valor){
+void adicionarItem(Item** inicio, int valor) {
     Item* novoItem = criarItem(valor);
 
     if (*inicio == NULL) {
@@ -33,37 +26,38 @@ void adicionarItem(Item** inicio, musica valor){
         while (atual->proximo != NULL) {
             atual = atual->proximo;
         }
+
         atual->proximo = novoItem;
+        novoItem->anterior = atual;
     }
+}
+
+Item* obterItem(Item** inicio, int pos) {
+    Item* item = *inicio;
+    int i = 0;
+
+    while (i < pos && item != NULL) {
+        item = item->proximo;
+        i ++;
+    }
+
+    return item;
 }
 
 void exibirLista(Item** inicio) {
     Item* item = *inicio;
     while (item != NULL) {
-        musica musica1 = item->valor;
-        printf("Nome da musica: %s \n", musica1.nome);
-        printf("Tempo de duracao da musica: %.2f \n", musica1.duracao);
-        printf("Nome do artista: %s \n", musica1.artista);
-
+        printf("%d \n", item->valor);
         item = item->proximo;
     }
 }
 
-musica criarMusica() {
-    musica musica1;
-    musica1.nome = malloc(50);
-
-    printf("Informe o nome da musica: ");
-    scanf(" %[^\n]", musica1.nome);
-
-    printf("Informe o tempo de duracao da musica: ");
-    scanf("%f", &musica1.duracao);
-
-    musica1.artista = malloc(50);
-    printf("Informe o nome do artista: ");
-    scanf(" %[^\n]", musica1.artista);
-
-    return musica1;
+void exibirListaReversa(Item** final) {
+    Item* item = *final;
+    while (item != NULL) {
+        printf("%d \n", item->valor);
+        item = item->anterior;
+    }
 }
 
 void removerItem(Item** inicio, int pos) {
@@ -71,6 +65,7 @@ void removerItem(Item** inicio, int pos) {
 
     if (pos == 0) {
         *inicio = atual->proximo;
+        (*inicio)->anterior = NULL;
         free(atual);
         return;
     }
@@ -84,32 +79,37 @@ void removerItem(Item** inicio, int pos) {
 
     if (atual != NULL) {
         Item* itemRemover = atual->proximo;
-        atual->proximo = itemRemover->proximo;
+        Item* novoProximo = itemRemover->proximo;
+
+        atual->proximo = novoProximo;
+        novoProximo->anterior = atual;
+
         free(itemRemover);
-    } else {
-        printf("Posição inválida para remoção.\n");
     }
 }
 
 int main() {
-    char continuar = 'N';
-    Item * inicio = NULL;
-    do {
-        musica musica1 = criarMusica();
-        adicionarItem(&inicio, musica1);
-
-        printf("Deseja continuar? (s/n) ");
-        scanf(" %c", &continuar);
-
-    } while (toupper(continuar) == 'S');
+    Item* inicio = NULL;
+    adicionarItem(&inicio, 5);
+    adicionarItem(&inicio, 3);
+    adicionarItem(&inicio, 7);
+    adicionarItem(&inicio, 10);
+    adicionarItem(&inicio, 12);
 
     exibirLista(&inicio);
+
+    Item* item = obterItem(&inicio, 2);
+    printf("A posicao 2 da lista tem o valor: %d\n", item->valor);
 
     removerItem(&inicio, 0);
     printf("Removendo item da posição 0\n");
-    printf("Lista após a remoção:\n");
+    printf("Lista após remoção: \n");
 
     exibirLista(&inicio);
+
+    Item* ultimo = obterItem(&inicio, 3); // obtém o ultimo item da lista
+    printf("Exibindo a lista reversa: \n");
+    exibirListaReversa(&ultimo);
 
     return 0;
 }
